@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const axios = require('axios');
 
 class BookContentService extends Service {
+    // 爬取单本小说信息(书名、作者、简介、全部章节),并且保存到数据库当中
     async getBookChapters() {
         const res = await axios.get('http://xbiquge.la/15/15409/')
         const html = res.data;
@@ -49,6 +50,20 @@ class BookContentService extends Service {
 
         }
        
+    }
+    // 爬取单章内容
+    async getChapterContent() {
+        const {ctx} = this;
+        const res = await axios.get('http://www.xbiquge.la/15/15409/8163818.html');
+        const html = res.data;
+        const $ = cheerio.load(html);
+        // 章节名
+        const chapterName = $('div.bookname h1')[0].children[0].data;
+        // 章节内容
+        let chapterContent = $('#content').text();
+        // 去除笔趣阁的广告语
+        chapterContent = chapterContent.indexOf('亲,点击进去,给个好评呗,分数越高更新越快') > 0? chapterContent.split('亲,点击进去,给个好评呗,分数越高更新越快')[0] : chapterContent;
+        return {chapterName,chapterContent};
     }
 }
 
