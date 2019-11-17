@@ -51,6 +51,28 @@ module.exports = app => {
       enable: false,
     },
   };
+  exports.mongo = {
+    client: {
+      host: '127.0.0.1',
+      port: '27017',
+      name: 'novel',
+      user: '',
+      password: '',
+      options: {
+
+      }
+    }
+  }
+
+  // recommended
+  exports.mongoose = {
+    client: {
+      url: 'mongodb://127.0.0.1/novel',
+      options: {},
+      // mongoose global plugins, expected a function or an array of function and options
+      //plugins: [createdPlugin, [updatedPlugin, pluginOptions]],
+    },
+  };
 
   return exports;
 };
