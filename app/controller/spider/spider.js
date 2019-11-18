@@ -10,6 +10,9 @@ class SpiderController extends Controller {
     async getChapterContent() {
         return await this.ctx.service.spider.bookContent.getChapterContent();
     }
+    async saveChapterContent() {
+        return await this.ctx.service.spider.bookContent.saveChapterContent();
+    }
 }
 
 

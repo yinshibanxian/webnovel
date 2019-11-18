@@ -1,6 +1,7 @@
 const Service = require('egg').Service;
 const cheerio = require('cheerio');
 const axios = require('axios');
+const fs = require('fs');
 
 class BookContentService extends Service {
     // 爬取单本小说信息(书名、作者、简介、全部章节),并且保存到数据库当中
@@ -64,6 +65,31 @@ class BookContentService extends Service {
         // 去除笔趣阁的广告语
         chapterContent = chapterContent.indexOf('亲,点击进去,给个好评呗,分数越高更新越快') > 0? chapterContent.split('亲,点击进去,给个好评呗,分数越高更新越快')[0] : chapterContent;
         return {chapterName,chapterContent};
+    }
+    // 保存书籍内容到文件
+    async saveChapterContent() {
+         const chapter = await this.getChapterContent();
+         const { chapterContent,chapterName } = chapter;
+         new Promise((resolve,reject) => {
+            fs.open(`public/novels/${chapterName}.txt`,'w',(err,fd)=> {
+                if(err) {
+                    reject(err)
+                }
+                resolve(fd)
+                
+            })
+         })
+         .then((res) => {
+             fs.writeFile(`public/novels/${chapterName}.txt`,chapterContent,(err,data) => {
+                 if(err) {
+                    return console.error(err);
+                 }
+             })
+         })
+         .catch(err => {
+             console.error(err)
+         })
+        
     }
 }
 
