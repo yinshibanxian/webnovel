@@ -6,4 +6,5 @@ module.exports = app => {
   router.get('/getbookchapter',controller.spider.spider.getBookChapters); // 爬取单本小说信息
   router.get('/getchaptercontent',controller.spider.spider.getChapterContent);// 爬取单章内容
   router.get('/savechaptercontent',controller.spider.spider.saveChapterContent)// 保存单章内容
+  router.get('/spider',controller.spider.spider.spider);
 };

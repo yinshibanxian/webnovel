@@ -5,8 +5,8 @@ const fs = require('fs');
 
 class BookContentService extends Service {
     // 爬取单本小说信息(书名、作者、简介、全部章节),并且保存到数据库当中
-    async getBookChapters() {
-        const res = await axios.get('http://xbiquge.la/15/15409/')
+    async getBookChapters(link) {
+        const res = await axios.get(link)
         const html = res.data;
         const $ = cheerio.load(html);
         
@@ -20,6 +20,7 @@ class BookContentService extends Service {
         const authorUnfix = $('#info p')[0].children[0].data;
         const author = authorUnfix.split('：')[1];
         const chapters = $('div#list dd a');
+        
         const chaptersToSave = [];
         const chapterToArray = Array.from(chapters);
         const preNovelInfo = await this.ctx.model.Novelinfo.find({novelName});
@@ -32,7 +33,7 @@ class BookContentService extends Service {
             
         })
         // 这本小说在数据库当中没有记录
-        if ( preNovelInfo[0].chapters.length === 0 ) {
+        if ( preNovelInfo.length === 0 || preNovelInfo[0].chapters.length === 0) {
             const NovelinfoModel = new this.ctx.model.Novelinfo({
                 novelName,
                 author,
@@ -52,45 +53,21 @@ class BookContentService extends Service {
         }
        
     }
-    // 爬取单章内容
-    async getChapterContent() {
-        const {ctx} = this;
-        const res = await axios.get('http://www.xbiquge.la/15/15409/8163818.html');
-        const html = res.data;
-        const $ = cheerio.load(html);
-        // 章节名
-        const chapterName = $('div.bookname h1')[0].children[0].data;
-        // 章节内容
-        let chapterContent = $('#content').text();
-        // 去除笔趣阁的广告语
-        chapterContent = chapterContent.indexOf('亲,点击进去,给个好评呗,分数越高更新越快') > 0? chapterContent.split('亲,点击进去,给个好评呗,分数越高更新越快')[0] : chapterContent;
-        return {chapterName,chapterContent};
-    }
+    
     // 保存书籍内容到文件
-    async saveChapterContent() {
-         const chapter = await this.getChapterContent();
-         const { chapterContent,chapterName } = chapter;
-         new Promise((resolve,reject) => {
-            fs.open(`public/novels/${chapterName}.txt`,'w',(err,fd)=> {
-                if(err) {
-                    reject(err)
-                }
-                resolve(fd)
-                
-            })
-         })
-         .then((res) => {
-             fs.writeFile(`public/novels/${chapterName}.txt`,chapterContent,(err,data) => {
-                 if(err) {
-                    return console.error(err);
-                 }
-             })
-         })
-         .catch(err => {
-             console.error(err)
-         })
+    async saveChapterContent(novelName,href,chapter) {
+         const chapterContent = await this.ctx.service.spider.chapterContent.getChapterContent(href);
+         // 过滤空格
+         const chapterName = chapter.replace(/ /g,'',);
+         try {
+            fs.openSync(`public/novels/${novelName}/${chapterName}.txt`,'w');
+            fs.writeFileSync(`public/novels/${novelName}/${chapterName}.txt`,chapterContent);
+         }catch(err) {
+             return console.error(err);
+         }
         
     }
+
 }
 
 module.exports = BookContentService;
