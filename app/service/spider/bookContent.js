@@ -58,7 +58,7 @@ class BookContentService extends Service {
     async saveChapterContent(novelName,href,chapter) {
          const chapterContent = await this.ctx.service.spider.chapterContent.getChapterContent(href);
          // 过滤空格
-         const chapterName = chapter.replace(/ /g,'',);
+         const chapterName = chapter.replace(/ |\\|\/|\*|\<|\>|\|\？/g,'',);
          try {
             fs.openSync(`public/novels/${novelName}/${chapterName}.txt`,'w');
             fs.writeFileSync(`public/novels/${novelName}/${chapterName}.txt`,chapterContent);
