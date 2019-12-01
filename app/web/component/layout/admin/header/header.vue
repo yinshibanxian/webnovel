@@ -52,8 +52,8 @@ export default {
     return {
       collapse: false,
       site: {
-        name: "Egg",
-        description: "Egg Vue"
+        name: "Spider",
+        description: "Tourist Spider System"
       }
     };
   },

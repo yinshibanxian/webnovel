@@ -16,6 +16,10 @@ class SpiderController extends Controller {
     async spider() {
          return await this.ctx.service.spider.spider.spider();
     }
+    async trip(ctx) {
+        const res  = await this.ctx.service.spider.spider.trip();
+        ctx.body = res;
+   }
 }
 
 

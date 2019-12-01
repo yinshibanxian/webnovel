@@ -1,148 +1,111 @@
 <template>
-  <el-row class="panel-group" :gutter="40">
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class='card-panel' @click="handleSetLineChartData('newVisitis')">
-        <div class="card-panel-icon-wrapper icon-people">
-          <div icon-class="peoples" class-name="card-panel-icon"></div>
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">New Visits</div>
-          <span class="card-panel-num">2600</span>
-        </div>
-      </div>
-    </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('messages')">
-        <div class="card-panel-icon-wrapper icon-message">
-          <div icon-class="message" class-name="card-panel-icon" ></div>
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">Messages</div>
-          <span class="card-panel-num">3000</span>
-        </div>
-      </div>
-    </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('purchases')">
-        <div class="card-panel-icon-wrapper icon-money">
-          <div icon-class="money" class-name="card-panel-icon" ></div>
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">Purchases</div>
-          <span class="card-panel-num">3200</span>
-        </div>
-      </div>
-    </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('shoppings')">
-        <div class="card-panel-icon-wrapper icon-shoppingCard">
-          <div icon-class="shoppingCard" class-name="card-panel-icon" ></div>
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">Shoppings</div>
-          <span class="card-panel-num">3200</span>
-        </div>
-      </div>
-    </el-col>
-  </el-row>
+    <div class="container" v-loading="loading"  element-loading-text="爬取中，请稍候" element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.8)">
+          <el-form :model="formData" :rules="rules" ref="form" label-width="100px" class="form">
+              <el-form-item label="景点名称" prop="name">
+                <el-input v-model="formData.name" size="mini"></el-input>
+              </el-form-item>
+              <el-form-item label="爬取页数" prop="pageNum"> 
+                  <el-input v-model="formData.pageNum" type="number" size="mini"></el-input>
+              </el-form-item>
+               <el-form-item>
+                <el-button type="primary" @click="submitForm('form')">立即爬取</el-button>
+                <el-button @click="resetForm('form')">重置</el-button>
+              </el-form-item>
+          </el-form>
+          <a :href="href" class="download-btn" v-show="showDownloadBtn">下载爬取内容</a>
+  </div>
 </template>
 
-<script>
+<script type="text/babel">
+// import { async } from 'q';
+import axios from 'axios';
 export default {
-  components: {},
-  methods: {
-    handleSetLineChartData(type) {
-      this.$emit("handleSetLineChartData", type);
+  data() {
+    return {
+        formData: {
+            name: '',
+            pageNum: ''
+        },
+        rules: {
+            name: [
+                {required: true, message: '请输入景点名称', trigger: 'blur'},
+                {min: 1, max: 12, message: '长度在1到12个字符', trigger: 'blur'}
+            ],
+            pageNum: [
+                {required: true, message: '请输入爬取页数', trigger: 'blur'},
+                {min: 1, max: 20, message: '大小在1与12之间', trigger: 'blur'}
+            ]
+        },
+        loading: false,
+        showDownloadBtn: false,
+        href: ''
     }
+  },
+  components: {
+
+  },
+  methods: {
+      submitForm(formName) {
+          this.$refs[formName].validate((valid) => {
+              if(valid) {
+                this.loading = true;
+                this.href = `/download?file=${this.formData.name}`;
+                try {
+                axios.get('/trip',{
+                  params: {
+                    attraction: this.formData.name,
+                    pageNum: this.formData.pageNum
+                  }
+                }).then(res => {
+                  this.loading = false;
+                  console.log(res.data);
+                  if(res.data) {
+                    this.$message.success('爬取成功!');
+                    this.showDownloadBtn = true;
+                  }else {
+                    this.$message.error('爬取失败，请重试!');
+                  }
+                })}catch(err) {
+                  if(err) {
+                    this.loading = false;
+                    this.$message.error('爬取失败，请重试!'+err);
+                  }
+                }
+                
+              }else {
+                  this.$message.error('提交失败');
+              }
+          })
+      },
+      resetForm(formName) {
+        this.$refs[formName].resetFields();
+      },
+      download() {
+        axios.get('/download').then(res=> {
+          console.log(res);
+        })
+      }
   }
-};
+}
 </script>
 
 <style scoped>
-.panel-group {
-  margin-top: 18px;
+.container {
+  display: flex;
+  vertical-align: center;
+  align-items: center;
 }
-
-.panel-group .card-panel-col {
-  margin-bottom: 32px;
-}
-
-.panel-group .card-panel {
-  height: 108px;
-  cursor: pointer;
-  font-size: 12px;
-  position: relative;
-  overflow: hidden;
-  color: #666;
-  background: #fff;
-  box-shadow: 4px 4px 40px rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.05);
-}
-
-.panel-group .card-panel:hover .card-panel-icon-wrapper {
-  color: #fff;
-}
-
-.panel-group .card-panel:hover .icon-people {
-  background: #40c9c6;
-}
-
-.panel-group .card-panel:hover .icon-message {
-  background: #36a3f7;
-}
-
-.panel-group .card-panel:hover .icon-money {
-  background: #f4516c;
-}
-
-.panel-group .card-panel:hover .icon-shoppingCard {
-  background: #34bfa3;
-}
-
-.panel-group .card-panel .icon-people {
-  color: #40c9c6;
-}
-
-.panel-group .card-panel .icon-message {
-  color: #36a3f7;
-}
-
-.panel-group .card-panel .icon-money {
-  color: #f4516c;
-}
-
-.panel-group .card-panel .icon-shoppingCard {
-  color: #34bfa3;
-}
-
-.panel-group .card-panel .card-panel-icon-wrapper {
-  float: left;
-  margin: 14px 0 0 14px;
-  padding: 16px;
-  transition: all 0.38s ease-out;
-  border-radius: 6px;
-}
-
-.panel-group .card-panel .card-panel-icon {
-  float: left;
-  font-size: 48px;
-}
-
-.panel-group .card-panel .card-panel-description {
-  float: right;
-  font-weight: bold;
-  margin: 26px;
-  margin-left: 0px;
-}
-
-.panel-group .card-panel .card-panel-description .card-panel-text {
-  line-height: 18px;
-  color: rgba(0, 0, 0, 0.45);
-  font-size: 16px;
-  margin-bottom: 12px;
-}
-
-.panel-group .card-panel .card-panel-description .card-panel-num {
-  font-size: 20px;
+.download-btn {
+    margin-top: 300px;
+    margin-left: -200px;
+    display: block;
+    width: 100px;
+    height: 30px;
+    background: #3f9eff;
+    font-size: 8px;
+    text-decoration:none;
+    text-align: center;
+    line-height: 28px;
+    color:#ffffff;
 }
 </style>
